@@ -1,5 +1,52 @@
 # Changelog
 
+## v0.0.8 — Build & CI Infrastructure (Unreleased)
+
+### esbuild bundling
+
+Replaced raw `tsc` output with esbuild for production builds. The extension now ships as a single minified `dist/extension.js` (14KB) instead of multiple files under `out/`.
+
+- Added `esbuild.js` build script with production minification and optional watch mode
+- `vscode:prepublish` now runs `npm run build` (esbuild) instead of `npm run compile` (tsc)
+- `tsc` is still used for type checking and compiling tests
+- Added `@vscode/vsce` as a devDependency for packaging and publishing
+
+**Package.json script changes:**
+- `build` — production esbuild bundle
+- `watch` — esbuild watch mode for development
+- `watch:tsc` — tsc watch with `--noEmit` for type checking during development
+- `compile` — tsc compilation (unchanged, used for tests)
+
+### CI/CD via GitHub Actions
+
+Added two workflows under `.github/workflows/`:
+
+**ci.yml** — runs on every push and PR to `main`:
+- `lint` — eslint on ubuntu
+- `build` — esbuild production build + VSIX packaging with artifact upload
+- `test` — unit tests on ubuntu, windows, and macos
+
+**publish.yml** — triggered by `v*` tags:
+- Runs tests, builds production bundle
+- Publishes to VS Code Marketplace via `VSCE_PAT` secret
+- Creates a GitHub Release with auto-generated release notes
+
+### README rewrite
+
+Replaced the original README with a focused, clutter-free version:
+- Install instructions for both Marketplace and building from source (clone, build, install VSIX)
+- Architecture overview showing module structure
+- Development setup commands
+- Configuration reference table
+
+### Housekeeping
+
+- Updated `.vscodeignore` to exclude `out/`, `.github/`, build config files
+- Updated `.gitignore` to exclude `dist/`
+- Closed R1-19 (no CI/CD pipeline) from the v0.0.6 open items
+
+---
+
 ## v0.0.7 — Security Hardening (Unreleased)
 
 ### Security Fixes
@@ -51,7 +98,7 @@ remains open.
 | R1-16 | MEDIUM | No read timeout on file stream — hangs on FIFO/network mounts | **Fixed.** 10s timeout with `settled` flag and stream destruction. |
 | R1-17 | MEDIUM | No cancellation support for initialization | **Fixed.** `initializationRunId` monotonic counter detects stale runs. |
 | R1-18 | LOW | Symlink traversal (`stat` follows symlinks to FIFOs) | Open. Timeout limits blast radius but `stat` itself has no timeout. |
-| R1-19 | MEDIUM | No CI/CD pipeline | Open. Tests exist but don't run automatically on PRs. |
+| R1-19 | MEDIUM | No CI/CD pipeline | **Fixed in v0.0.8.** GitHub Actions CI + publish workflows. |
 | R1-20 | MEDIUM | Stream overhead for small files (ReadStream for every size) | Open. Low priority — current approach is correct, just suboptimal for <512KB. |
 
 ---
@@ -261,7 +308,7 @@ via a lightweight mock (`test/vscode-mock.ts`):
 | # | Severity | Item | Notes |
 |---|----------|------|-------|
 | R1-18 | LOW | Symlink traversal | `stat()` follows symlinks; timeout limits blast radius |
-| R1-19 | MEDIUM | No CI/CD pipeline | Tests exist but need GitHub Actions |
+| R1-19 | MEDIUM | No CI/CD pipeline | **Fixed in v0.0.8.** GitHub Actions CI + publish workflows. |
 | R1-20 | LOW | Stream overhead for small files | Correct but suboptimal |
 | R2-5 | MEDIUM | `activeTimers` module-level global | Works correctly, inconsistent with AppState |
 | R2-6 | MEDIUM | Broad file watcher pattern | VS Code API limitation |

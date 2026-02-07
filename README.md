@@ -1,70 +1,112 @@
 # LineSight
 
-LineSight is a VS Code extension that shows the number of lines next to each file in the file explorer, helping you quickly understand the size of files in your project.
+[![CI](https://github.com/karansinghgit/LineSight/actions/workflows/ci.yml/badge.svg)](https://github.com/karansinghgit/LineSight/actions/workflows/ci.yml)
 
-The extension is available on the VSCode Marketplace for installing:
+A VS Code extension that displays line counts next to files in the explorer sidebar.
+
+Large files are a common friction point when working with LLMs — context windows have limits, and even modern IDEs with smart chunking perform better on smaller files. LineSight gives you an at-a-glance view of file sizes so you know when something needs to be broken up.
+
+<img src="resources/images/logo.png" width="100" height="100" alt="LineSight Logo">
+
+## Install
+
+**From the Marketplace** — search for "LineSight" in the VS Code extensions panel, or install directly:
 
 https://marketplace.cursorapi.com/items?itemName=2048Labs.linesight
 
-## Why I built this?
+**From source:**
 
-A common issue with LLM's is the size of the context window, and even though modern IDE's like Cursor support better chunking and indexing for large files, it still performs much better when working with smaller files.
+```sh
+git clone https://github.com/karansinghgit/LineSight.git
+cd LineSight
+npm install
+npm run build
+npx @vscode/vsce package --no-dependencies
+```
 
-LineSight allows you to quickly glance at line counts to understand when you need to refactor a particular file.
+This produces a `.vsix` file. Install it in VS Code:
 
-Efficient caching, progressive loading and prioritization make this extension very performant when running in the background.
+```
+code --install-extension linesight-*.vsix
+```
 
-Hope you find it useful :)
-
-<img src="resources/images/logo.png" width="128" height="128" alt="LineSight Logo">
-
-## Features
-
-- **Line Count Badges**: Shows the number of lines next to each file in the explorer
-- **Auto-Updates**: Line counts automatically update when files are edited
-- **Refresh Button**: Provides a refresh button in the explorer title bar to manually update counts
-- **Abbreviated Display**: Shows abbreviated counts (like "2K" for 2000+ lines) as badges
-- **Exact Counts in Tooltips**: Hover over a badge to see the exact line count
-- **Skip Large Directories**: Ignores directories like node_modules and .git for better performance
-- **Optimized Performance**: Minimal background overhead with smart caching and throttling
+Or open VS Code, go to Extensions > `...` menu > "Install from VSIX..." and select the file.
 
 ## Screenshot
 
 ![LineSight in action](resources/images/screenshot.png)
 
-## Usage
+## Features
 
-Once installed, LineSight will automatically display line counts next to your files in the explorer panel.
+- **Line count badges** in the explorer next to every tracked file
+- **Live updates** as you type — uses the in-memory editor buffer, zero disk I/O
+- **Abbreviated display** — `42`, `3H`, `2K`, `1M` as badges, exact counts in tooltips
+- **Refresh command** — manual refresh button in the explorer title bar
+- **Configurable** — control size limits, debounce timing, file types, excluded folders
+- **Workspace trust aware** — defers file scanning in untrusted workspaces
 
-- **Refresh Counts**: Click the refresh icon in the explorer title bar to manually refresh line counts
-- **View Exact Count**: Hover over a line count badge to see the exact number of lines in the tooltip
+## How It Works
 
-## Performance Considerations
+LineSight registers a `FileDecorationProvider` that VS Code queries whenever it renders a file in the explorer. On activation, it walks the workspace in batches, streams each file to count newlines, and caches the result. From there:
 
-- For very large files (over 5MB), line counts are estimated based on file size
-- Certain directories are skipped by default to improve performance: node_modules, .git, dist, build, out
-- The extension uses smart caching to minimize CPU usage
-- File watchers are limited to common code file types to reduce overhead
-- Updates are debounced and throttled to prevent performance impact
+- **Edits** update the count from the in-memory buffer (no disk read)
+- **Saves** trigger a disk-based recount
+- **File system changes** (create, rename, delete) are picked up by a watcher and debounced
 
-## Installation
+Performance is managed through bounded LRU caches, a concurrency limiter on parallel file reads, stream timeouts for hung files, and queue caps that trigger a full refresh under update storms.
 
-1. Install the extension from the VS Code Marketplace
-2. Reload VS Code Window
-3. Line counts will automatically appear next to files in the explorer
+## Configuration
 
-## Extension Settings
+All settings live under the `linesight.*` namespace.
 
-LineSight supports the following settings:
+| Setting | Default | Description |
+|---|---|---|
+| `sizeLimit` | `5000000` | Max file size (bytes) before switching to estimated counts |
+| `batchSize` | `200` | Files per initialization batch |
+| `debounceDelay` | `300` | Debounce delay (ms) for file change events |
+| `initialScanDelay` | `2000` | Delay (ms) before initial workspace scan |
+| `estimationFactor` | `50` | Bytes-per-line factor for large file estimates |
+| `excludeFolders` | `[]` | Additional folders to skip (additive to built-in defaults) |
+| `includeExtensions` | `[]` | File extensions to include (empty = built-in defaults) |
+| `showStartupNotifications` | `false` | Show status bar messages during initialization |
 
-- `linesight.sizeLimit`: max file size (bytes) before estimated counts are used
-- `linesight.batchSize`: files processed per initialization batch
-- `linesight.debounceDelay`: debounce delay (ms) for file/update events
-- `linesight.initialScanDelay`: delay (ms) before initial workspace scan
-- `linesight.estimationFactor`: bytes-per-line factor for large-file estimates
-- `linesight.excludeFolders`: extra folder paths to skip
-- `linesight.includeExtensions`: optional extensions to include (empty uses built-in defaults)
-- `linesight.showStartupNotifications`: show initialization status notifications
+**Built-in excluded folders:** node_modules, .git, dist, build, out, bin, obj, .vscode, .idea, .vs, vendor, coverage, .next, .nuxt, target, .sass-cache, .cache, and others.
+
+**Built-in included extensions:** 60+ file types covering web (.js, .ts, .jsx, .tsx, .html, .css, .vue, .svelte), systems (.go, .rs, .c, .cpp, .java, .py, .rb), data (.json, .yaml, .xml, .sql, .graphql), and more.
+
+## Architecture
+
+The codebase is split into focused, cycle-free modules:
+
+```
+extension.ts          thin entry point — wires everything together
+types.ts              shared TypeScript interfaces
+constants.ts          built-in file extension and folder lists
+config.ts             settings parsing and validation
+cache.ts              bounded LRU cache (ES2015 Map insertion order)
+concurrency.ts        promise-based concurrency limiter with FIFO queue
+timer.ts              tracked timeouts with clean disposal
+state.ts              central AppState threaded through all modules
+fileFilter.ts         path/extension filtering logic
+lineCounter.ts        stream-based line counting and formatting
+decorationProvider.ts FileDecorationProvider with batched notifications
+fileWatcher.ts        file system watching with debounced updates
+initialization.ts     workspace scanning with batch processing
+```
+
+Tests live in `src/test/` with a lightweight VS Code mock that allows unit testing without the extension host.
+
+## Development
+
+```sh
+npm install
+npm run compile        # type-check with tsc
+npm run build          # production bundle with esbuild
+npm run watch          # esbuild watch mode for development
+npm run lint           # eslint
+npm run test:unit      # compile + mocha unit tests
+npm test               # compile + lint + unit tests
+```
 
 ## License
 
