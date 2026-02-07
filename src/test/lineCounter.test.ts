@@ -15,10 +15,18 @@ describe('formatLineCount', () => {
     assert.strictEqual(formatLineCount(9_999), '9K');
   });
 
-  it('returns plain number under 1000', () => {
+  it('formats hundreds with H suffix', () => {
+    assert.strictEqual(formatLineCount(100), '1H');
+    assert.strictEqual(formatLineCount(155), '1H');
+    assert.strictEqual(formatLineCount(224), '2H');
+    assert.strictEqual(formatLineCount(500), '5H');
+    assert.strictEqual(formatLineCount(999), '9H');
+  });
+
+  it('returns plain number under 100', () => {
     assert.strictEqual(formatLineCount(0), '0');
     assert.strictEqual(formatLineCount(1), '1');
-    assert.strictEqual(formatLineCount(999), '999');
+    assert.strictEqual(formatLineCount(99), '99');
   });
 });
 

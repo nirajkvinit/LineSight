@@ -15,10 +15,30 @@ export const BINARY_EXTENSIONS = new Set([
 
 /** Source / text extensions counted when the user hasn't overridden `includeExtensions`. */
 export const DEFAULT_INCLUDED_EXTENSIONS = new Set([
-  '.js', '.jsx', '.ts', '.tsx', '.html', '.css', '.scss', '.less', '.vue', '.svelte',
+  // Web
+  '.js', '.jsx', '.ts', '.tsx', '.html', '.css', '.scss', '.sass', '.less',
+  '.vue', '.svelte', '.astro', '.mdx',
+  // Templates
+  '.hbs', '.ejs', '.pug',
+  // Systems / compiled
   '.go', '.py', '.java', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.cs', '.php', '.rb',
-  '.rs', '.kt', '.swift', '.sh', '.bash', '.zsh', '.sql', '.prisma', '.graphql', '.gql',
-  '.json', '.yaml', '.yml', '.xml', '.toml', '.ini', '.md', '.txt'
+  '.rs', '.kt', '.swift', '.scala', '.groovy', '.lua', '.r', '.m', '.zig', '.dart',
+  // Functional
+  '.hs', '.ex', '.exs', '.clj', '.cljs', '.fs', '.fsx', '.jl',
+  // Enterprise / legacy
+  '.vb', '.pl', '.pm',
+  // Shell / scripting
+  '.sh', '.bash', '.zsh', '.ps1', '.psm1', '.psd1',
+  // SQL dialects
+  '.sql', '.pgsql', '.plsql',
+  // Schema / query
+  '.prisma', '.graphql', '.gql', '.proto',
+  // Data / config
+  '.json', '.yaml', '.yml', '.xml', '.toml', '.ini', '.cfg', '.conf', '.csv', '.log',
+  // Infra
+  '.tf', '.tfvars', '.hcl', '.gradle',
+  // Docs
+  '.md', '.txt', '.rst', '.tex',
 ]);
 
 /** Well-known extensionless filenames that should still be line-counted. */

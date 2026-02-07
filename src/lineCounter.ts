@@ -16,7 +16,17 @@ import * as path from 'path';
 import { BINARY_EXTENSIONS } from './constants';
 import { AppState } from './state';
 
-/** Format a number for the explorer badge: 1234 -> "1K", 2500000 -> "2M". */
+/**
+ * Format a number for the explorer badge.
+ *
+ * VS Code silently drops FileDecoration badges longer than 2 characters,
+ * so every tier must produce a 1–2 char string:
+ *   1–99  →  "1" … "99"
+ *   100–999  →  "1H" … "9H"  (H = hundreds: 1H ≈ 100s, 2H ≈ 200s, …)
+ *   1 000–9 999  →  "1K" … "9K"
+ *   10 000–999 999  →  "10K" … "999K" — but 3+ chars; use "XK" floored
+ *   1 000 000+  →  "1M" …
+ */
 export function formatLineCount(count: number): string {
   if (count >= 1_000_000) {
     return `${Math.floor(count / 1_000_000)}M`;
@@ -24,6 +34,10 @@ export function formatLineCount(count: number): string {
 
   if (count >= 1_000) {
     return `${Math.floor(count / 1_000)}K`;
+  }
+
+  if (count >= 100) {
+    return `${Math.floor(count / 100)}H`;
   }
 
   return count.toString();
