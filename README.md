@@ -1,6 +1,6 @@
 # LineSight
 
-[![CI](https://github.com/karansinghgit/LineSight/actions/workflows/ci.yml/badge.svg)](https://github.com/karansinghgit/LineSight/actions/workflows/ci.yml)
+[![CI](https://github.com/nirajkvinit/LineSight/actions/workflows/ci.yml/badge.svg)](https://github.com/nirajkvinit/LineSight/actions/workflows/ci.yml)
 
 A VS Code extension that displays line counts next to files in the explorer sidebar.
 
