@@ -34,24 +34,79 @@
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "title": "LineSight",
+      "properties": {
+        "linesight.sizeLimit": {
+          "type": "number",
+          "default": 5000000,
+          "minimum": 1000,
+          "description": "Maximum file size in bytes before LineSight switches to an estimated line count."
+        },
+        "linesight.batchSize": {
+          "type": "number",
+          "default": 200,
+          "minimum": 1,
+          "description": "Number of files refreshed per batch during initialization."
+        },
+        "linesight.debounceDelay": {
+          "type": "number",
+          "default": 300,
+          "minimum": 50,
+          "description": "Debounce delay in milliseconds for file update events."
+        },
+        "linesight.initialScanDelay": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 0,
+          "description": "Delay in milliseconds before the initial workspace scan starts."
+        },
+        "linesight.estimationFactor": {
+          "type": "number",
+          "default": 50,
+          "minimum": 1,
+          "description": "Bytes-per-line factor used to estimate counts for oversized files."
+        },
+        "linesight.excludeFolders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional folder paths to exclude from line counting."
+        },
+        "linesight.includeExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Optional file extensions to include (e.g. .ts, .py). If empty, LineSight uses the built-in defaults."
+        },
+        "linesight.showStartupNotifications": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show status notifications while LineSight initializes."
+        }
+      }
     }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
+    "test": "npm run compile && npm run lint",
     "package": "vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",
-    "@types/node": "^16.18.34",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.44.0",
-    "typescript": "^5.1.6"
+    "@types/node": "^20.17.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^8.57.1",
+    "typescript": "^5.8.2"
   },
   "keywords": ["line count", "file explorer", "productivity"],
   "author": "Karan Singh",

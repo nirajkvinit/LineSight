@@ -55,7 +55,16 @@ Once installed, LineSight will automatically display line counts next to your fi
 
 ## Extension Settings
 
-This extension has no configurable settings at this time.
+LineSight supports the following settings:
+
+- `linesight.sizeLimit`: max file size (bytes) before estimated counts are used
+- `linesight.batchSize`: files processed per initialization batch
+- `linesight.debounceDelay`: debounce delay (ms) for file/update events
+- `linesight.initialScanDelay`: delay (ms) before initial workspace scan
+- `linesight.estimationFactor`: bytes-per-line factor for large-file estimates
+- `linesight.excludeFolders`: extra folder paths to skip
+- `linesight.includeExtensions`: optional extensions to include (empty uses built-in defaults)
+- `linesight.showStartupNotifications`: show initialization status notifications
 
 ## License
 
